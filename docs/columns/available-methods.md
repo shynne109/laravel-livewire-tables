@@ -303,6 +303,28 @@ Column::make('Name')
     ->setColumnLabelStatusEnabled()
 ```
 
+### Column Header Tooltips
+
+You can add a tooltip icon with a title to the column header using the `setToolTip` method. This displays a small icon next to the column title that shows additional information on hover:
+
+```php
+Column::make('Full Name', 'name')
+    ->setToolTip('heroicon-o-question-mark-circle', 'This column displays the user full name'),
+```
+
+The first parameter is the icon name (using Blade Heroicons), and the second parameter is the tooltip title that appears on hover.
+
+You can customize the tooltip styling using `setToolTipAttributes`:
+
+```php
+Column::make('Full Name', 'name')
+    ->setToolTip('heroicon-o-information-circle', 'Additional information about this column')
+    ->setToolTipAttributes([
+        'class' => 'text-blue-500',
+        'default-styling' => false,
+    ]),
+```
+
 ## See Also
 [Column Styling](./styling)
 

@@ -2,6 +2,11 @@
 
 All notable changes to `laravel-livewire-tables` will be documented in this file
 
+## [Unreleased]
+### New Features
+- Add column header tooltip support via `setToolTip()` method
+- Add Laravel 13 and Livewire 4 support
+
 ## [v3.7.3] - 2025-05-03
 ### Bug Fixes
 - Interim fix for Livewire Component Columns to mitigate core Livewire bug by @lrljoe in https://github.com/rappasoft/laravel-livewire-tables/pull/2258

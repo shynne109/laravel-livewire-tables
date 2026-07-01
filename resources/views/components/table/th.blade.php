@@ -8,6 +8,10 @@
     $customLabelAttributes = $allThAttributes['labelAttributes'];
     $customIconAttributes = $this->getThSortIconAttributes($column);
     $direction = $column->hasField() ? $this->getSort($column->getColumnSelectName()) : $this->getSort($column->getSlug()) ?? null;
+    $hasToolTip = $column->hasToolTip();
+    $toolTipIcon = $hasToolTip ? $column->getToolTipIcon() : null;
+    $toolTipTitle = $hasToolTip ? $column->getToolTipTitle() : null;
+    $toolTipAttributes = $hasToolTip ? $column->getToolTipAttributes() : null;
 @endphp
 
 <th {{
@@ -28,6 +32,9 @@
     @if($column->getColumnLabelStatus())
         @unless ($this->sortingIsEnabled() && ($column->isSortable() || $column->getSortCallback()))
             <x-livewire-tables::table.th.label :$customLabelAttributes :columnTitle="$column->getTitle()" />
+            @if($hasToolTip)
+                <x-livewire-tables::table.th.tooltip :$toolTipIcon :$toolTipTitle :$toolTipAttributes />
+            @endif
         @else
             @if ($isTailwind)
 
@@ -40,6 +47,9 @@
                             ->except(['default', 'default-colors', 'default-styling', 'wire:key'])
                 }}>
                     <x-livewire-tables::table.th.label :$customLabelAttributes :columnTitle="$column->getTitle()" />
+                    @if($hasToolTip)
+                        <x-livewire-tables::table.th.tooltip :$toolTipIcon :$toolTipTitle :$toolTipAttributes />
+                    @endif
                     <x-livewire-tables::table.th.sort-icons :$direction :$customIconAttributes />
                 </button>
             @elseif ($isBootstrap)
@@ -51,6 +61,9 @@
                             ->except(['default', 'default-colors', 'default-styling', 'wire:key'])
                 }}>
                     <x-livewire-tables::table.th.label :$customLabelAttributes :columnTitle="$column->getTitle()" />
+                    @if($hasToolTip)
+                        <x-livewire-tables::table.th.tooltip :$toolTipIcon :$toolTipTitle :$toolTipAttributes />
+                    @endif
                     <x-livewire-tables::table.th.sort-icons :$direction :$customIconAttributes />
 
                 </div>
