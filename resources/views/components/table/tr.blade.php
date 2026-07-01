@@ -11,7 +11,7 @@
     x-on:drop.prevent="currentlyReorderingStatus && dropEvent(event)"
     x-on:dragover.prevent.throttle.500ms="currentlyReorderingStatus && dragOverEvent(event)"
     x-on:dragleave.prevent.throttle.500ms="currentlyReorderingStatus && dragLeaveEvent(event)"
-    @if($this->hasDisplayLoadingPlaceholder()) 
+    @if($this->hasDisplayLoadingPlaceholder())
         wire:loading.class.add="hidden d-none"
     @else
         wire:loading.class.delay="opacity-50 dark:bg-gray-900 dark:opacity-60"
@@ -20,12 +20,15 @@
     :draggable="currentlyReorderingStatus"
     wire:key="{{ $tableName }}-tablerow-tr-{{ $row->{$primaryKey} }}"
     loopType="{{ ($rowIndex % 2 === 0) ? 'even' : 'odd' }}"
+    @if($this->rowDetailIsEnabled && $this->rowDetailTriggerIsRow && $this->isRowDetailVisible($row))
+        x-on:click="$dispatch('toggle-row-detail', { tableName: '{{ $tableName }}', rowPk: '{{ $row->{$primaryKey} }}' })"
+    @endif
     {{
         $attributes->merge($customAttributes)
                 ->class([
                     'bg-white dark:bg-gray-700 dark:text-white rappasoft-striped-row' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 === 0),
                     'bg-gray-50 dark:bg-gray-800 dark:text-white rappasoft-striped-row' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 !== 0),
-                    'cursor-pointer' => ($isTailwind && $this->hasTableRowUrl() && ($customAttributes['default'] ?? true)),
+                    'cursor-pointer' => ($isTailwind && ($this->hasTableRowUrl() || ($this->rowDetailIsEnabled && $this->rowDetailTriggerIsRow)) && ($customAttributes['default'] ?? true)),
                     'bg-light rappasoft-striped-row' => ($isBootstrap && $rowIndex % 2 === 0 && ($customAttributes['default'] ?? true)),
                     'bg-white rappasoft-striped-row' => ($isBootstrap && $rowIndex % 2 !== 0 && ($customAttributes['default'] ?? true)),
                 ])

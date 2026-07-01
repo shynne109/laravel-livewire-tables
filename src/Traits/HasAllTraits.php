@@ -26,6 +26,7 @@ trait HasAllTraits
     use WithBulkActions,
         HasCustomAttributes,
         WithCollapsingColumns,
+        WithRowDetail,
         WithColumnSelect,
         WithConfigurableAreas,
         WithCustomisations,

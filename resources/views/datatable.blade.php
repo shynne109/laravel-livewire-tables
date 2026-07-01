@@ -81,6 +81,10 @@
                             <x-livewire-tables::table.th.collapsed-columns />
                         @endif
 
+                        @if($this->rowDetailIsEnabled && $this->rowDetailTriggerIsButton)
+                            <x-livewire-tables::table.th.row-detail />
+                        @endif
+
                         @tableloop($this->selectedVisibleColumns as $index => $column)
                             <x-livewire-tables::table.th wire:key="{{ $tableName.'-table-head-'.$index }}" :$column :$index />
                         @endtableloop
@@ -101,9 +105,13 @@
                         @php($showBulkActionsSections = $this->showBulkActionsSections)
                         @php($showCollapsingColumnSections = $this->showCollapsingColumnSections)
                         @php($selectedVisibleColumns = $this->selectedVisibleColumns)
+                        @php($rowDetailEnabled = $this->rowDetailIsEnabled)
 
                         @tableloop ($currentRows as $rowIndex => $row)
                             <x-livewire-tables::table.tr wire:key="{{ $tableName }}-row-wrap-{{ $row->{$primaryKey} }}" :$row :$rowIndex>
+                                @if($rowDetailEnabled && $this->rowDetailTriggerIsButton)
+                                    <x-livewire-tables::table.td.row-detail wire:key="{{ $tableName }}-row-detail-btn-{{ $row->{$primaryKey} }}" :$row :$rowIndex />
+                                @endif
                                 @if($getCurrentlyReorderingStatus)
                                     <x-livewire-tables::table.td.reorder x-cloak x-show="currentlyReorderingStatus" wire:key="{{ $tableName }}-row-reorder-{{ $row->{$primaryKey} }}" :rowID="$tableName.'-'.$row->{$this->getPrimaryKey()}" :$rowIndex />
                                 @endif
@@ -124,6 +132,10 @@
                                     </x-livewire-tables::table.td>
                                 @endtableloop
                             </x-livewire-tables::table.tr>
+
+                            @if ($rowDetailEnabled)
+                                <x-livewire-tables::table.row-detail :$row :$rowIndex />
+                            @endif
 
                             @if ($showCollapsingColumnSections)
                                 <x-livewire-tables::table.collapsed-columns :$row :$rowIndex />
