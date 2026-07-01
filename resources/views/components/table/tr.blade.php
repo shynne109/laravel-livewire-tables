@@ -7,6 +7,10 @@
 
 <tr
     rowpk='{{ $row->{$primaryKey} }}'
+    @if($this->rowDetailIsEnabled && $this->isRowDetailVisible($row))
+        x-data="{ rowDetail: false }"
+        x-init="$watch('rowDetail', value => $dispatch('toggle-row-detail', {'tableName': '{{ $tableName }}', 'row': {{ $rowIndex }}}))"
+    @endif
     x-on:dragstart.self="currentlyReorderingStatus && dragStart(event)"
     x-on:drop.prevent="currentlyReorderingStatus && dropEvent(event)"
     x-on:dragover.prevent.throttle.500ms="currentlyReorderingStatus && dragOverEvent(event)"
@@ -21,7 +25,7 @@
     wire:key="{{ $tableName }}-tablerow-tr-{{ $row->{$primaryKey} }}"
     loopType="{{ ($rowIndex % 2 === 0) ? 'even' : 'odd' }}"
     @if($this->rowDetailIsEnabled && $this->rowDetailTriggerIsRow && $this->isRowDetailVisible($row))
-        x-on:click="$dispatch('toggle-row-detail', { tableName: '{{ $tableName }}', rowPk: '{{ $row->{$primaryKey} }}' })"
+        x-on:click="rowDetail = !rowDetail"
     @endif
     {{
         $attributes->merge($customAttributes)

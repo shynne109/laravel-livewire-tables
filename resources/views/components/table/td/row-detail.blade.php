@@ -2,7 +2,7 @@
 @props(['row', 'rowIndex'])
 
 @if ($this->rowDetailIsEnabled && $this->rowDetailTriggerIsButton && $this->isRowDetailVisible($row))
-    <td x-data="{ open: false }" wire:key="{{ $tableName }}-row-detail-toggle-{{ $row->{$primaryKey} }}"
+    <td wire:key="{{ $tableName }}-row-detail-toggle-{{ $row->{$primaryKey} }}"
         {{
             $attributes
                 ->merge()
@@ -13,13 +13,13 @@
         }}
     >
         <button
-            x-on:click.prevent="$dispatch('toggle-row-detail', { tableName: '{{ $tableName }}', rowPk: '{{ $row->{$primaryKey} }}' }); open = !open"
+            x-on:click.prevent="rowDetail = !rowDetail"
             type="button"
             @class([
                 'border-0 bg-transparent p-0' => $isBootstrap,
             ])
         >
-            <x-heroicon-o-chevron-down x-cloak x-show="!open" {{
+            <x-heroicon-o-chevron-down x-cloak x-show="!rowDetail" {{
                 $attributes->merge($this->getRowDetailButtonExpandAttributes)
                     ->class([
                         'h-5 w-5' => $isTailwind && ($this->getRowDetailButtonExpandAttributes['default-styling'] ?? true),
@@ -28,7 +28,7 @@
                     ])
                     ->except(['default', 'default-styling', 'default-colors'])
             }} />
-            <x-heroicon-o-chevron-up x-cloak x-show="open" {{
+            <x-heroicon-o-chevron-up x-cloak x-show="rowDetail" {{
                 $attributes->merge($this->getRowDetailButtonCollapseAttributes)
                     ->class([
                         'h-5 w-5' => $isTailwind && ($this->getRowDetailButtonCollapseAttributes['default-styling'] ?? true),

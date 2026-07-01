@@ -52,6 +52,12 @@ trait RowDetailHelpers
         return $this->getRowDetailTrigger() === 'row';
     }
 
+    #[Computed]
+    public function rowDetailTriggerIsNone(): bool
+    {
+        return $this->getRowDetailTrigger() === 'none';
+    }
+
     public function isRowDetailVisible(Model $row): bool
     {
         if ($this->rowDetailVisibleCallback instanceof Closure) {
@@ -59,5 +65,19 @@ trait RowDetailHelpers
         }
 
         return true;
+    }
+
+    public function toggleRowDetail(string $rowPk): void
+    {
+        if (in_array($rowPk, $this->expandedRows, true)) {
+            $this->expandedRows = array_values(array_diff($this->expandedRows, [$rowPk]));
+        } else {
+            $this->expandedRows[] = $rowPk;
+        }
+    }
+
+    public function isRowExpanded(string $rowPk): bool
+    {
+        return in_array($rowPk, $this->expandedRows, true);
     }
 }

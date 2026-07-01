@@ -55,6 +55,13 @@ trait RowDetailConfiguration
         return $this;
     }
 
+    public function setRowDetailTriggerNone(): self
+    {
+        $this->rowDetailTrigger = 'none';
+
+        return $this;
+    }
+
     /**
      * @param  Closure(mixed $row): bool  $callback
      */

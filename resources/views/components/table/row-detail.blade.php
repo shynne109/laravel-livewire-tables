@@ -4,7 +4,7 @@
 @if ($this->rowDetailIsEnabled && $this->hasRowDetailView() && $this->isRowDetailVisible($row))
     @php($customAttributes = $this->getTrAttributes($row, $rowIndex))
     <tr x-data
-        x-on:toggle-row-detail.window="($event.detail.tableName === '{{ $tableName }}' && $event.detail.rowPk === '{{ $row->{$primaryKey} }}') ? $el.classList.toggle('{{ $isBootstrap ? 'd-none' : 'hidden' }}') : null"
+        x-on:toggle-row-detail.window="($event.detail.tableName === '{{ $tableName }}' && $event.detail.row === {{ $rowIndex }}) ? $el.classList.toggle('{{ $isBootstrap ? 'd-none' : 'hidden' }}') : null"
         {{
             $attributes->merge([
                     'wire:key' => $tableName.'-row-detail-'.$row->{$primaryKey},

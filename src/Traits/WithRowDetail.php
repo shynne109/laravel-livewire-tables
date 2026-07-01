@@ -20,4 +20,7 @@ trait WithRowDetail
     protected string $rowDetailTrigger = 'button';
 
     protected ?Closure $rowDetailVisibleCallback = null;
+
+    /** @var array<string> */
+    public array $expandedRows = [];
 }
