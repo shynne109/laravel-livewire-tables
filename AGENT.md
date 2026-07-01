@@ -100,6 +100,20 @@ Chain setter methods on `$this`. The single required call is `setPrimaryKey('id'
 
 See `docs/datatable/available-methods.md` for the full list — prefer searching the docs over guessing method names.
 
+### Expandable rows
+
+Show inline detail panels below rows, toggled via Alpine.js (no server round-trip). Enable in `configure()`:
+
+- `setRowExpandableEnabled()` — enables the feature with a built-in chevron toggle column.
+- `setRowExpandableView('partials.user-detail')` — the Blade view rendered inside the expandable area. Receives `$row` and `$rowIndex`.
+- `setRowExpandableRowClickEnabled()` — also toggle by clicking anywhere on the row.
+
+The Alpine variable `rowExpandable` is available on every `<tr>`, so custom buttons in any column can toggle the detail panel with `x-on:click="rowExpandable = !rowExpandable"`.
+
+Other methods: `setRowExpandableDisabled()`, `setRowExpandableRowClickDisabled()`, `setRowExpandableVisibleCallback(fn ($row) => ...)`, `setRowExpandableButtonExpandAttributes([...])`, `setRowExpandableButtonCollapseAttributes([...])`.
+
+See `docs/rows/expandable-rows.md` for full documentation.
+
 ## Columns
 
 `Column::make('Title', 'field')` — second arg is the DB field/relation path; omit it to derive from the title. Relations use dot notation: `Column::make('City', 'address.city.name')`.

@@ -1,13 +1,13 @@
 @aware(['tableName', 'primaryKey', 'isTailwind', 'isBootstrap'])
 @props(['row', 'rowIndex'])
 
-@if ($this->rowDetailIsEnabled && $this->hasRowDetailView() && $this->isRowDetailVisible($row))
+@if ($this->rowExpandableIsEnabled && $this->hasRowExpandableView() && $this->isRowExpandableVisible($row))
     @php($customAttributes = $this->getTrAttributes($row, $rowIndex))
     <tr x-data
-        x-on:toggle-row-detail.window="($event.detail.tableName === '{{ $tableName }}' && $event.detail.row === {{ $rowIndex }}) ? $el.classList.toggle('{{ $isBootstrap ? 'd-none' : 'hidden' }}') : null"
+        x-on:toggle-row-expandable.window="($event.detail.tableName === '{{ $tableName }}' && $event.detail.row === {{ $rowIndex }}) ? $el.classList.toggle('{{ $isBootstrap ? 'd-none' : 'hidden' }}') : null"
         {{
             $attributes->merge([
-                    'wire:key' => $tableName.'-row-detail-'.$row->{$primaryKey},
+                    'wire:key' => $tableName.'-row-expandable-'.$row->{$primaryKey},
                 ])
                 ->merge($customAttributes)
                 ->class([
@@ -23,7 +23,7 @@
             'px-6 py-4' => $isTailwind,
             'p-3' => $isBootstrap,
         ])>
-            @include($this->getRowDetailView(), ['row' => $row, 'rowIndex' => $rowIndex])
+            @include($this->getRowExpandableView(), ['row' => $row, 'rowIndex' => $rowIndex])
         </td>
     </tr>
 @endif

@@ -7,9 +7,9 @@
 
 <tr
     rowpk='{{ $row->{$primaryKey} }}'
-    @if($this->rowDetailIsEnabled && $this->isRowDetailVisible($row))
-        x-data="{ rowDetail: false }"
-        x-init="$watch('rowDetail', value => $dispatch('toggle-row-detail', {'tableName': '{{ $tableName }}', 'row': {{ $rowIndex }}}))"
+    @if($this->rowExpandableIsEnabled && $this->isRowExpandableVisible($row))
+        x-data="{ rowExpandable: false }"
+        x-init="$watch('rowExpandable', value => $dispatch('toggle-row-expandable', {'tableName': '{{ $tableName }}', 'row': {{ $rowIndex }}}))"
     @endif
     x-on:dragstart.self="currentlyReorderingStatus && dragStart(event)"
     x-on:drop.prevent="currentlyReorderingStatus && dropEvent(event)"
@@ -24,15 +24,15 @@
     :draggable="currentlyReorderingStatus"
     wire:key="{{ $tableName }}-tablerow-tr-{{ $row->{$primaryKey} }}"
     loopType="{{ ($rowIndex % 2 === 0) ? 'even' : 'odd' }}"
-    @if($this->rowDetailIsEnabled && $this->rowDetailTriggerIsRow && $this->isRowDetailVisible($row))
-        x-on:click="rowDetail = !rowDetail"
+    @if($this->rowExpandableIsEnabled && $this->rowExpandableRowClickIsEnabled && $this->isRowExpandableVisible($row))
+        x-on:click="rowExpandable = !rowExpandable"
     @endif
     {{
         $attributes->merge($customAttributes)
                 ->class([
                     'bg-white dark:bg-gray-700 dark:text-white rappasoft-striped-row' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 === 0),
                     'bg-gray-50 dark:bg-gray-800 dark:text-white rappasoft-striped-row' => ($isTailwind && ($customAttributes['default'] ?? true) && $rowIndex % 2 !== 0),
-                    'cursor-pointer' => ($isTailwind && ($this->hasTableRowUrl() || ($this->rowDetailIsEnabled && $this->rowDetailTriggerIsRow)) && ($customAttributes['default'] ?? true)),
+                    'cursor-pointer' => ($isTailwind && ($this->hasTableRowUrl() || ($this->rowExpandableIsEnabled && $this->rowExpandableRowClickIsEnabled)) && ($customAttributes['default'] ?? true)),
                     'bg-light rappasoft-striped-row' => ($isBootstrap && $rowIndex % 2 === 0 && ($customAttributes['default'] ?? true)),
                     'bg-white rappasoft-striped-row' => ($isBootstrap && $rowIndex % 2 !== 0 && ($customAttributes['default'] ?? true)),
                 ])
