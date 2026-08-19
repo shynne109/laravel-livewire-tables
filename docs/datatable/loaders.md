@@ -79,11 +79,34 @@ public function configure(): void
 }
 ```
 
-## Lazy Placeholder
 
-Livewire supports [lazy loading](https://livewire.laravel.com/docs/lazy) via the `lazy` attribute. When using `lazy="on-load"` on a datatable component, Alpine.js variables need to be pre-initialized on the placeholder to avoid errors during the morph process.
+## Lazy Loading
 
-The lazy placeholder feature provides a built-in skeleton placeholder with proper Alpine.js scope, supporting both Tailwind CSS and Bootstrap.
+Tables support Livewire's `lazy` attribute out of the box:
+
+```blade
+<livewire:pets-table lazy />
+```
+
+The default placeholder is an empty element carrying the table's Alpine scope, which is what stops Alpine throwing `ReferenceError` while the real table is being loaded in. To show a skeleton instead, override `placeholder()` on your table and keep that scope:
+
+```php
+public function placeholder(): string
+{
+    return view('tables.pets-skeleton', ['scope' => $this->getAlpineFallbackScope()])->render();
+}
+```
+
+```blade
+{{-- tables/pets-skeleton.blade.php --}}
+<div x-data="{{ $scope }}">
+    <div class="animate-pulse h-64 bg-gray-100 dark:bg-gray-700 rounded-md"></div>
+</div>
+```
+
+## Lazy Placeholder (Fork Feature)
+
+The fork provides a built-in skeleton placeholder with proper Alpine.js scope, supporting both Tailwind CSS and Bootstrap. No manual `placeholder()` override needed.
 
 ### Basic Usage
 

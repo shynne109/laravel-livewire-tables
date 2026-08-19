@@ -38,62 +38,24 @@ And you may also pass an array of attributes, which will be applied to the "butt
 
 ## Icons
 
-You can add icons to the left and/or right of the button text using the `setIconLeft()` and `setIconRight()` methods:
+You may display an icon alongside the title. The icon string is used as a CSS class, so it works with any icon font (FontAwesome, Bootstrap Icons, etc.)
 
 ```php
     WireLinkColumn::make("Delete Item")
         ->title(fn($row) => 'Delete Item')
         ->action(fn($row) => 'delete("'.$row->id.'")')
-        ->setIconLeft('heroicon-o-trash'),
+        ->setIcon('fas fa-trash'),
 ```
 
-You can also add icons on both sides:
-```php
-    WireLinkColumn::make("View Details")
-        ->title(fn($row) => 'View')
-        ->action(fn($row) => 'viewDetails("'.$row->id.'")')
-        ->setIconLeft('heroicon-o-eye')
-        ->setIconRight('heroicon-o-chevron-right'),
-```
-
-The `setIcon()` method is an alias for `setIconRight()`:
-```php
-    WireLinkColumn::make("Delete Item")
-        ->title(fn($row) => 'Delete Item')
-        ->action(fn($row) => 'delete("'.$row->id.'")')
-        ->setIcon('heroicon-o-trash'),
-```
-
-### Icon Attributes
-
-You can customize icon attributes individually or for both icons:
+The icon appears to the right of the title by default. Use `setIconLeft()` / `setIconRight()` to change the side, and `setIconAttributes()` to customise the `<i>` element:
 
 ```php
     WireLinkColumn::make("Delete Item")
         ->title(fn($row) => 'Delete Item')
         ->action(fn($row) => 'delete("'.$row->id.'")')
-        ->setIconLeft('heroicon-o-trash')
-        ->setIconLeftAttributes(['class' => 'w-4 h-4 mr-2']),
-```
-
-```php
-    WireLinkColumn::make("View Details")
-        ->title(fn($row) => 'View')
-        ->action(fn($row) => 'viewDetails("'.$row->id.'")')
-        ->setIconLeft('heroicon-o-eye')
-        ->setIconRight('heroicon-o-chevron-right')
-        ->setIconLeftAttributes(['class' => 'w-4 h-4 mr-2'])
-        ->setIconRightAttributes(['class' => 'w-4 h-4 ml-2']),
-```
-
-To set the same attributes for both icons:
-```php
-    WireLinkColumn::make("Action")
-        ->title(fn($row) => 'Action')
-        ->action(fn($row) => 'doAction("'.$row->id.'")')
-        ->setIconLeft('heroicon-o-star')
-        ->setIconRight('heroicon-o-star')
-        ->setIconAttributes(['class' => 'w-5 h-5']),
+        ->setIcon('fas fa-trash')
+        ->setIconLeft()
+        ->setIconAttributes(['class' => 'text-red-500']),
 ```
 
 Please also see the following for other available methods:

@@ -7,8 +7,9 @@
 @php($isBootstrap5 = $this->isBootstrap5)
 @php($localisationPath = $this->getLocalisationPath)
 
-<div x-data="{{ $this->getAlpineDefaultScope() }}">
-    <div {{ $this->getTopLevelAttributes() }}>
+<div>
+    <div x-data="{{ $this->getAlpineFallbackScope }}">
+        <div {{ $this->getTopLevelAttributes() }}>
 
             @includeWhen(
                 $this->hasConfigurableAreaFor('before-wrapper'),
@@ -168,5 +169,6 @@
                 $this->getParametersForConfigurableArea('after-wrapper')
             )
 
+        </div>
     </div>
 </div>

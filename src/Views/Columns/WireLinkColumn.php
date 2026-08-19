@@ -2,13 +2,16 @@
 
 namespace Rappasoft\LaravelLivewireTables\Views\Columns;
 
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 use Rappasoft\LaravelLivewireTables\Exceptions\DataTableConfigurationException;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use Rappasoft\LaravelLivewireTables\Views\Columns\Traits\Configuration\WireLinkColumnConfiguration;
-use Rappasoft\LaravelLivewireTables\Views\Columns\Traits\HasIcons;
 use Rappasoft\LaravelLivewireTables\Views\Columns\Traits\Helpers\WireLinkColumnHelpers;
-use Rappasoft\LaravelLivewireTables\Views\Traits\Core\{HasActionCallback,HasConfirmation, HasTitleCallback};
+use Rappasoft\LaravelLivewireTables\Views\Traits\Core\{HasActionCallback,HasConfirmation, HasIcon, HasTitleCallback};
 
 class WireLinkColumn extends Column
 {
@@ -17,7 +20,7 @@ class WireLinkColumn extends Column
         HasActionCallback,
         HasTitleCallback,
         HasConfirmation,
-        HasIcons;
+        HasIcon;
 
     protected string $view = 'livewire-tables::includes.columns.wire-link';
 
@@ -28,7 +31,7 @@ class WireLinkColumn extends Column
         $this->label(fn () => null);
     }
 
-    public function getContents(Model $row): null|string|\Illuminate\Support\HtmlString|DataTableConfigurationException|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+    public function getContents(Model $row): null|string|HtmlString|DataTableConfigurationException|Application|Factory|View
     {
         if (! $this->hasTitleCallback()) {
             throw new DataTableConfigurationException('You must specify a title callback for a WireLink column.');
@@ -44,12 +47,6 @@ class WireLinkColumn extends Column
             ->withIsBootstrap($this->isBootstrap())
             ->withTitle(app()->call($this->getTitleCallback(), ['row' => $row]))
             ->withPath(app()->call($this->getActionCallback(), ['row' => $row]))
-            ->withAttributes($this->hasAttributesCallback() ? app()->call($this->getAttributesCallback(), ['row' => $row]) : [])
-            ->withHasIconLeft($this->hasIconLeft())
-            ->withIconLeft($this->getIconLeft())
-            ->withIconLeftAttributes($this->getIconLeftAttributes())
-            ->withHasIconRight($this->hasIconRight())
-            ->withIconRight($this->getIconRight())
-            ->withIconRightAttributes($this->getIconRightAttributes());
+            ->withAttributes($this->hasAttributesCallback() ? app()->call($this->getAttributesCallback(), ['row' => $row]) : []);
     }
 }
