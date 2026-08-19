@@ -148,6 +148,73 @@ public function filters(): array
 }
 ```
 
+## Row refresh (single-row update)
+
+Refresh a single row without re-querying the entire table. This is much more efficient than `refreshDatatable` for large datasets.
+
+### How it works
+
+`refreshRow` fetches only the specified row from the database and replaces it in the cached rows collection. Livewire's morphdom diffing ensures only the changed row's DOM is updated. A per-row loading effect (opacity + pointer-events disabled) is shown while the refresh is in flight.
+
+### Dispatching from a Livewire component
+
+```php
+// Refresh a single row — triggers loading effect + DB fetch for that row only
+$this->dispatch('refreshing-row', id: $employeeId); // shows loading on the row
+$this->dispatch('refreshRow', id: $employeeId);      // fetches fresh data
+
+// Refresh multiple rows in one query
+$this->dispatch('refreshRows', ids: [1, 2, 3]);
+```
+
+### Dispatching from Alpine.js / JavaScript
+
+```javascript
+// Single row
+$dispatch('refreshing-row', { id: 123 });
+Livewire.dispatch('refreshRow', { id: 123 });
+
+// Multiple rows
+Livewire.dispatch('refreshRows', { ids: [1, 2, 3] });
+```
+
+### Targeting a specific table (multi-table pages)
+
+```php
+// Include tableName to scope to a specific table instance
+$this->dispatch('refreshing-row', id: $id, tableName: 'employees-table');
+$this->dispatch('refreshRow', id: $id)->to(EmployeeTable::class);
+```
+
+### Per-row loading effect
+
+The loading effect is handled automatically via Alpine.js events:
+
+1. Dispatch `refreshing-row` → the specific row fades to 50% opacity with pointer-events disabled
+2. Dispatch `refreshRow` → server fetches fresh data for that row
+3. Server dispatches `row-refreshed` → row returns to normal, DOM morphs with new data
+
+### Overriding the fresh row query
+
+If your table uses a custom `builder()` with scopes or complex joins, override `buildFreshRowQuery()`:
+
+```php
+protected function buildFreshRowQuery(): Builder
+{
+    return Employee::query()
+        ->with(['department', 'roles'])
+        ->withCount('tasks');
+}
+```
+
+### Performance comparison
+
+| Method | DB queries | Rows fetched | DOM updates |
+|---|---|---|---|
+| `refreshDatatable` | Full query (filters, joins, pagination) | All on page | Entire table |
+| `refreshRow` | `WHERE id = ?` | 1 | Single row |
+| `refreshRows` | `WHERE id IN (...)` | N | N rows |
+
 ## Conventions for this codebase
 
 - Use the `make:datatable` command to scaffold; match existing sibling components in `App\Livewire`.
