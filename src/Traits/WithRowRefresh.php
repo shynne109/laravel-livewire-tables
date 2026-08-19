@@ -2,6 +2,7 @@
 
 namespace Rappasoft\LaravelLivewireTables\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
 use Illuminate\Support\Collection;
@@ -154,7 +155,7 @@ trait WithRowRefresh
      * Build a query for fetching fresh row(s) with the same eager loads
      * and aggregates as the table's base query.
      */
-    protected function buildFreshRowQuery(): \Illuminate\Database\Eloquent\Builder
+    protected function buildFreshRowQuery(): Builder
     {
         $query = $this->getModel()::query()
             ->with($this->getRelationships());

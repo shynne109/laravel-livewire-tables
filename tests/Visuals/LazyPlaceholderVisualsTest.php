@@ -2,6 +2,7 @@
 
 namespace Rappasoft\LaravelLivewireTables\Tests\Visuals;
 
+use Illuminate\Contracts\View\View;
 use PHPUnit\Framework\Attributes\Group;
 use Rappasoft\LaravelLivewireTables\Tests\Http\Livewire\PetsTable;
 use Rappasoft\LaravelLivewireTables\Tests\Http\Livewire\PetsTableLazyPlaceholder;
@@ -19,7 +20,7 @@ final class LazyPlaceholderVisualsTest extends TestCase
 
         $placeholder = $table->placeholder();
 
-        $this->assertInstanceOf(\Illuminate\Contracts\View\View::class, $placeholder);
+        $this->assertInstanceOf(View::class, $placeholder);
     }
 
     public function test_placeholder_renders_x_data_with_alpine_fallback_variables(): void
@@ -111,7 +112,7 @@ final class LazyPlaceholderVisualsTest extends TestCase
 
         $placeholder = $table->placeholder();
 
-        $this->assertInstanceOf(\Illuminate\Contracts\View\View::class, $placeholder);
+        $this->assertInstanceOf(View::class, $placeholder);
     }
 
     public function test_placeholder_content_is_null_when_disabled(): void
