@@ -35,6 +35,7 @@ trait HasAllTraits
         WithFooter,
         WithRefresh,
         WithReordering,
+        WithRowRefresh,
         WithSecondaryHeader,
         WithSessionStorage,
         WithTableAttributes,
