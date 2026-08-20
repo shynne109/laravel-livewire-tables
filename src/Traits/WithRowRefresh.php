@@ -51,15 +51,15 @@ trait WithRowRefresh
             $isHtml = $column->isHtml();
 
             $cells[] = [
-                'key' => $tableName . '-table-td-' . $id . '-' . $slug,
+                'key' => $tableName.'-table-td-'.$id.'-'.$slug,
                 'content' => $isHtml ? $content : e($content),
             ];
         }
 
         // Push rendered cells to client for targeted DOM update
         $this->js(
-            "
-            const cells = " . json_encode($cells) . ";
+            '
+            const cells = '.json_encode($cells).";
             cells.forEach(cell => {
                 const td = document.querySelector('[wire\\\\:key=\"' + cell.key + '\"]');
                 if (td) td.innerHTML = cell.content;
@@ -105,14 +105,14 @@ trait WithRowRefresh
                 $isHtml = $column->isHtml();
 
                 $cells[] = [
-                    'key' => $tableName . '-table-td-' . $id . '-' . $slug,
+                    'key' => $tableName.'-table-td-'.$id.'-'.$slug,
                     'content' => $isHtml ? $content : e($content),
                 ];
             }
 
             $this->js(
-                "
-                const cells = " . json_encode($cells) . ";
+                '
+                const cells = '.json_encode($cells).";
                 cells.forEach(cell => {
                     const td = document.querySelector('[wire\\\\:key=\"' + cell.key + '\"]');
                     if (td) td.innerHTML = cell.content;
