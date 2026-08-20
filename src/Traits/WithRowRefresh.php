@@ -3,64 +3,71 @@
 namespace Rappasoft\LaravelLivewireTables\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\AbstractCursorPaginator;
-use Illuminate\Pagination\AbstractPaginator;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
 
 trait WithRowRefresh
 {
     /**
      * Refresh a single row in the table by its primary key value.
      *
-     * Instead of re-querying the entire dataset (like refreshDatatable),
-     * this fetches only the single row from the database and replaces it
-     * in the cached rows collection. Livewire's morphdom diffing ensures
-     * only the changed row's DOM is updated.
+     * Uses #[Renderless] to skip the full table re-render — avoiding both
+     * the expensive getRows() query and the heavy morphdom diff. Cell
+     * contents are rendered server-side and pushed to the client via JS
+     * for a targeted DOM update.
      *
      * Dispatch from any Livewire component:
-     *   $this->dispatch('refreshRow', id: $primaryKeyValue);
+     *   $this->dispatch('refreshing-row', id: $id, tableName: 'my-table');
+     *   $this->dispatch('refreshRow', id: $id)->to(MyTable::class);
      *
      * Dispatch from Alpine.js / JavaScript:
+     *   $dispatch('refreshing-row', { id: 123, tableName: 'my-table' });
      *   Livewire.dispatch('refreshRow', { id: 123 });
-     *
-     * Dispatch to a specific table (when multiple tables exist on the page):
-     *   $this->dispatch('refreshRow', id: $id)->to(EmployeeTable::class);
      */
+    #[Renderless]
     #[On('refreshRow')]
     public function refreshRow(int|string $id): void
     {
-        $rows = $this->getRows;
+        $freshRow = $this->fetchFreshRow($id);
+        $tableName = $this->getTableName();
 
-        // If getRows hasn't been computed yet, nothing to refresh in cache
-        if ($rows === null) {
+        if (! $freshRow) {
+            $this->dispatch('row-refreshed', id: $id, tableName: $tableName);
+
             return;
         }
 
-        $primaryKey = $this->getPrimaryKey();
+        // Render each cell's content server-side using the column definitions
+        $cells = [];
 
-        $items = $this->getRowsCollection($rows);
+        foreach ($this->getColumns() as $colIndex => $column) {
+            if ($column->isLabel()) {
+                continue;
+            }
 
-        $index = $items->search(fn ($item) => $item->{$primaryKey} == $id);
+            $slug = $column->getSlug();
+            $content = (string) $column->setIndexes(0, $colIndex)->renderContents($freshRow);
+            $isHtml = $column->isHtml();
 
-        if ($index === false) {
-            return; // Row not on current page — no-op
+            $cells[] = [
+                'key' => $tableName . '-table-td-' . $id . '-' . $slug,
+                'content' => $isHtml ? $content : e($content),
+            ];
         }
 
-        $freshRow = $this->fetchFreshRow($id);
+        // Push rendered cells to client for targeted DOM update
+        $this->js(
+            "
+            const cells = " . json_encode($cells) . ";
+            cells.forEach(cell => {
+                const td = document.querySelector('[wire\\\\:key=\"' + cell.key + '\"]');
+                if (td) td.innerHTML = cell.content;
+            });
+            "
+        );
 
-        if ($freshRow) {
-            $items[$index] = $freshRow;
-        } else {
-            // Row was deleted — remove it from the collection
-            $items->forget($index);
-
-            $this->paginationCurrentCount = $items->count();
-            $this->paginationCurrentItems = $items->pluck($primaryKey)->toArray();
-        }
-
-        // Dispatch browser event so Alpine can clear per-row loading state
-        $this->dispatch('row-refreshed', id: $id, tableName: $this->getTableName());
+        $this->dispatch('row-refreshed', id: $id, tableName: $tableName);
     }
 
     /**
@@ -70,60 +77,51 @@ trait WithRowRefresh
      * a handful of rows rather than the entire dataset.
      *
      * Dispatch from any Livewire component:
-     *   $this->dispatch('refreshRows', ids: [1, 2, 3]);
+     *   $this->dispatch('refreshRows', ids: [1, 2, 3])->to(MyTable::class);
      */
+    #[Renderless]
     #[On('refreshRows')]
     public function refreshRows(array $ids): void
     {
-        $rows = $this->getRows;
-
-        if ($rows === null) {
-            return;
-        }
-
-        $primaryKey = $this->getPrimaryKey();
-        $items = $this->getRowsCollection($rows);
-
-        // Fetch all requested rows in a single query
+        $tableName = $this->getTableName();
         $freshRows = $this->fetchFreshRows($ids);
-        $removedAny = false;
 
         foreach ($ids as $id) {
-            $index = $items->search(fn ($item) => $item->{$primaryKey} == $id);
+            $freshRow = $freshRows->firstWhere($this->getPrimaryKey(), $id);
 
-            if ($index === false) {
+            if (! $freshRow) {
                 continue;
             }
 
-            $freshRow = $freshRows->firstWhere($primaryKey, $id);
+            $cells = [];
 
-            if ($freshRow) {
-                $items[$index] = $freshRow;
-            } else {
-                $items->forget($index);
-                $removedAny = true;
+            foreach ($this->getColumns() as $colIndex => $column) {
+                if ($column->isLabel()) {
+                    continue;
+                }
+
+                $slug = $column->getSlug();
+                $content = (string) $column->setIndexes(0, $colIndex)->renderContents($freshRow);
+                $isHtml = $column->isHtml();
+
+                $cells[] = [
+                    'key' => $tableName . '-table-td-' . $id . '-' . $slug,
+                    'content' => $isHtml ? $content : e($content),
+                ];
             }
+
+            $this->js(
+                "
+                const cells = " . json_encode($cells) . ";
+                cells.forEach(cell => {
+                    const td = document.querySelector('[wire\\\\:key=\"' + cell.key + '\"]');
+                    if (td) td.innerHTML = cell.content;
+                });
+                "
+            );
         }
 
-        if ($removedAny) {
-            $this->paginationCurrentCount = $items->count();
-            $this->paginationCurrentItems = $items->pluck($primaryKey)->toArray();
-        }
-
-        // Dispatch browser event to clear per-row loading states
-        $this->dispatch('rows-refreshed', ids: $ids, tableName: $this->getTableName());
-    }
-
-    /**
-     * Extract the underlying Collection from rows (works with paginators and plain collections).
-     */
-    protected function getRowsCollection(mixed $rows): Collection
-    {
-        if ($rows instanceof AbstractPaginator || $rows instanceof AbstractCursorPaginator) {
-            return $rows->getCollection();
-        }
-
-        return $rows;
+        $this->dispatch('rows-refreshed', ids: $ids, tableName: $tableName);
     }
 
     /**
