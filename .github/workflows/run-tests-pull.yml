@@ -14,18 +14,19 @@ jobs:
       max-parallel: 2
       matrix:
         os: [ubuntu-latest]
-        php: [8.2, 8.3]
+        php: [8.1, 8.2, 8.3]
         laravel: [10.*]
+        livewire: [3.*, 4.*]
         stability: [prefer-dist]
 
-    name: PULL PHP-${{ matrix.php }} - Laravel-10
+    name: PULL PHP-${{ matrix.php }} - Laravel-10 - Livewire-${{ matrix.livewire }}
     env:
       extensionKey: phpextensions-${{ matrix.os }}-P${{ matrix.php }}
       extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, fileinfo, :psr
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         
       - name: Setup cache environment
         id: extcache
@@ -36,18 +37,17 @@ jobs:
           key: ${{ env.extensionKey }}
 
       - name: Cache extensions
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.extcache.outputs.dir }}
           key: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
           restore-keys: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.40.0
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.extensions }}
-          tools: phpunit:9.6
           ini-values: memory_limit=512M
           coverage: none
         env:
@@ -61,11 +61,11 @@ jobs:
         run: |
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-composer-
+          key: ${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-
 
       - name: Add token
         env: 
@@ -73,19 +73,25 @@ jobs:
         run: |
           composer config github-oauth.github.com $GITHUB_TOKEN
           
+      - name: Allow verified upstream advisories for legacy compatibility tests
+        if: matrix.laravel == '10.*' || matrix.laravel == '11.*' || matrix.laravel == 11
+        run: composer config --json policy.advisories.ignore-id '{"PKSA-d5tc-s1qs-h781":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-m5cs-t1y6-qpcs":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-3r5d-mb8f-1qw9":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-mdq4-51ck-6kdq":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+."}'
+
       - name: Install dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
-        run: composer require "laravel/framework:${{ matrix.laravel }}.*" --no-interaction --no-update
+        run: composer require "laravel/framework:${{ matrix.laravel }}" "livewire/livewire:${{ matrix.livewire }}" --no-interaction --no-update
 
       - name: Update dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
         run: composer update --${{ matrix.stability }} --no-interaction
+
+      - name: Audit dependencies
+        run: composer audit
 
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
+      # Laravel 10/11 generate facade cache files non-atomically; parallel workers can read incomplete files.
       - name: Run Unit Tests
-        run: php ./vendor/bin/paratest --testsuite "Laravel Livewire Tables Unit Test Suite" --no-coverage
+        run: php ./vendor/bin/phpunit --testsuite "Laravel Livewire Tables Unit Test Suite" --no-coverage
 
       - name: Run Visuals Tests
         run: php ./vendor/bin/phpunit --testsuite "Laravel Livewire Tables Visuals Test Suite" --no-coverage
@@ -99,16 +105,17 @@ jobs:
         os: [ubuntu-latest]
         php: [8.2, 8.3, 8.4]
         laravel: [11.*]
+        livewire: [3.*, 4.*]
         stability: [prefer-dist]
 
-    name: PULL PHP-${{ matrix.php }} - Laravel-11
+    name: PULL PHP-${{ matrix.php }} - Laravel-11 - Livewire-${{ matrix.livewire }}
     env:
       extensionKey: phpextensions-${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}
       extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, fileinfo, :psr
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         
       - name: Setup cache environment
         id: extcache
@@ -119,18 +126,17 @@ jobs:
           key: ${{ env.extensionKey }}
 
       - name: Cache extensions
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.extcache.outputs.dir }}
           key: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
           restore-keys: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.40.0
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.extensions }}
-          tools: phpunit:latest
           ini-values: memory_limit=512M
           coverage: none
         env:
@@ -144,11 +150,11 @@ jobs:
         run: |
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-composer-
+          key: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-
 
       - name: Add token
         env: 
@@ -156,19 +162,25 @@ jobs:
         run: |
           composer config github-oauth.github.com $GITHUB_TOKEN
           
+      - name: Allow verified upstream advisories for legacy compatibility tests
+        if: matrix.laravel == '10.*' || matrix.laravel == '11.*' || matrix.laravel == 11
+        run: composer config --json policy.advisories.ignore-id '{"PKSA-d5tc-s1qs-h781":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-m5cs-t1y6-qpcs":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-3r5d-mb8f-1qw9":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-mdq4-51ck-6kdq":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+."}'
+
       - name: Install dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
-        run: composer require "laravel/framework:${{ matrix.laravel }}.*" --no-interaction --no-update
+        run: composer require "laravel/framework:${{ matrix.laravel }}" "livewire/livewire:${{ matrix.livewire }}" --no-interaction --no-update
 
       - name: Update dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
         run: composer update --${{ matrix.stability }} --no-interaction
+
+      - name: Audit dependencies
+        run: composer audit
 
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
+      # Laravel 10/11 generate facade cache files non-atomically; parallel workers can read incomplete files.
       - name: Run Unit Tests
-        run: php ./vendor/bin/paratest --testsuite "Laravel Livewire Tables Unit Test Suite" --no-coverage
+        run: php ./vendor/bin/phpunit --testsuite "Laravel Livewire Tables Unit Test Suite" --no-coverage
 
       - name: Run Visuals Tests
         run: php ./vendor/bin/phpunit --testsuite "Laravel Livewire Tables Visuals Test Suite" --no-coverage
@@ -182,16 +194,17 @@ jobs:
         os: [ubuntu-latest]
         php: [8.2, 8.3, 8.4]
         laravel: [12.*]
+        livewire: [3.*, 4.*]
         stability: [prefer-dist]
 
-    name: PULL PHP-${{ matrix.php }} - Laravel-12
+    name: PULL PHP-${{ matrix.php }} - Laravel-12 - Livewire-${{ matrix.livewire }}
     env:
       extensionKey: phpextensions-${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}
       extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, fileinfo, :psr
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         
       - name: Setup cache environment
         id: extcache
@@ -202,18 +215,17 @@ jobs:
           key: ${{ env.extensionKey }}
 
       - name: Cache extensions
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.extcache.outputs.dir }}
           key: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
           restore-keys: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.40.0
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.extensions }}
-          tools: phpunit:latest
           ini-values: memory_limit=512M
           coverage: none
         env:
@@ -227,11 +239,11 @@ jobs:
         run: |
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-composer-
+          key: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-
 
       - name: Add token
         env: 
@@ -239,13 +251,18 @@ jobs:
         run: |
           composer config github-oauth.github.com $GITHUB_TOKEN
           
+      - name: Allow verified upstream advisories for legacy compatibility tests
+        if: matrix.laravel == '10.*' || matrix.laravel == '11.*' || matrix.laravel == 11
+        run: composer config --json policy.advisories.ignore-id '{"PKSA-d5tc-s1qs-h781":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-m5cs-t1y6-qpcs":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-3r5d-mb8f-1qw9":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-mdq4-51ck-6kdq":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+."}'
+
       - name: Install dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
-        run: composer require "laravel/framework:${{ matrix.laravel }}.*" --no-interaction --no-update
+        run: composer require "laravel/framework:${{ matrix.laravel }}" "livewire/livewire:${{ matrix.livewire }}" --no-interaction --no-update
 
       - name: Update dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
         run: composer update --${{ matrix.stability }} --no-interaction
+
+      - name: Audit dependencies
+        run: composer audit
 
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
@@ -263,18 +280,19 @@ jobs:
       max-parallel: 2
       matrix:
         os: [ubuntu-latest]
-        php: [8.3, 8.4]
+        php: [8.3, 8.4, 8.5]
         laravel: [13.*]
+        livewire: [3.*, 4.*]
         stability: [prefer-dist]
 
-    name: PULL PHP-${{ matrix.php }} - Laravel-13
+    name: PULL PHP-${{ matrix.php }} - Laravel-13 - Livewire-${{ matrix.livewire }}
     env:
       extensionKey: phpextensions-${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}
       extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, fileinfo, :psr
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         
       - name: Setup cache environment
         id: extcache
@@ -285,18 +303,17 @@ jobs:
           key: ${{ env.extensionKey }}
 
       - name: Cache extensions
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.extcache.outputs.dir }}
           key: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
           restore-keys: ${{ matrix.os }}-${{ steps.extcache.outputs.key }}
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.40.0
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.extensions }}
-          tools: phpunit:latest
           ini-values: memory_limit=512M
           coverage: none
         env:
@@ -310,11 +327,11 @@ jobs:
         run: |
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-composer-
+          key: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-
 
       - name: Add token
         env: 
@@ -322,13 +339,18 @@ jobs:
         run: |
           composer config github-oauth.github.com $GITHUB_TOKEN
           
+      - name: Allow verified upstream advisories for legacy compatibility tests
+        if: matrix.laravel == '10.*' || matrix.laravel == '11.*' || matrix.laravel == 11
+        run: composer config --json policy.advisories.ignore-id '{"PKSA-d5tc-s1qs-h781":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-m5cs-t1y6-qpcs":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-3r5d-mb8f-1qw9":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+.","PKSA-mdq4-51ck-6kdq":"Legacy Laravel 10/11 compatibility tests only; production apps must use patched Laravel 12.69+ or 13.30+."}'
+
       - name: Install dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
-        run: composer require "laravel/framework:${{ matrix.laravel }}.*" --no-interaction --no-update
+        run: composer require "laravel/framework:${{ matrix.laravel }}" "livewire/livewire:${{ matrix.livewire }}" --no-interaction --no-update
 
       - name: Update dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
         run: composer update --${{ matrix.stability }} --no-interaction
+
+      - name: Audit dependencies
+        run: composer audit
 
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"

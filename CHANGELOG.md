@@ -8,6 +8,39 @@ All notable changes to `laravel-livewire-tables` will be documented in this file
 - Custom lazy placeholder views with `setLazyPlaceholderView()` method
 - Row expandable enhancements
 
+## [v3.10.0] - 2026-10-20
+
+### Upgrade Notes
+
+- Livewire 3 remains supported. Applications moving to Livewire 4 should follow its upgrade guide and run `php artisan optimize:clear`.
+- If you published package views or JavaScript, merge the updated files into your overrides, or back up customizations before republishing `livewire-tables-views` and `livewire-tables-public`. The updated views preserve blur search/filter timing, and the JavaScript fixes reordering across multiple tables.
+- Keep distinct table names and matching data arrays for independent query strings and persisted state on pages containing multiple tables. Existing names and IDs remain compatible.
+
+### Changes
+
+- Support Livewire 4 while retaining Livewire 3 compatibility and test both major versions explicitly in CI.
+- Generate class-based tables without depending on removed Livewire console internals, preserving configured namespaces, paths and overwrite protection.
+- Preserve search and filter blur behavior across Livewire versions and handle whole-array filter updates.
+- Scope reordering to the owning table so pages containing multiple tables cannot move or save another table's rows; exclude structural rows from saved order data ([#2328](https://github.com/rappasoft/laravel-livewire-tables/issues/2328)).
+- Move the public demo to [tables.rappasoft.com](https://tables.rappasoft.com), running Livewire 4 with Tailwind, Bootstrap 4 and Bootstrap 5 examples.
+
+## [v3.9.0] - 2026-10-09
+
+### Upgrade Notes
+
+- Bootstrap 4 and 5 controls have new templates and styling. If you published package views or CSS, compare and merge the updated files with your overrides, or back them up before republishing `livewire-tables-views` and `livewire-tables-public`. Keep core asset injection enabled or include the package stylesheet explicitly.
+- Give every table on a page a distinct `setTableName()` value when using independent reordering sessions. The default name remains `table`, preserving existing query-string behavior.
+- Laravel 10 and 11 compatibility is retained, but these framework versions are outside security support and have unresolved advisories. Use patched Laravel 12.69+ or 13.30+ in production. The four specific compatibility-CI exceptions do not change application Composer security checks.
+
+### Changes
+
+- Adopt the Bootstrap toolbar, filters, filter pills, and column selector redesign contributed by @daniel-skopek in [#2329](https://github.com/rappasoft/laravel-livewire-tables/pull/2329), preserving customization attributes and using the existing Heroicons dependency. The styles are scoped to Bootstrap tables and the pagination label is translated across supported locales.
+- Keep Bootstrap filter popovers within the table toolbar on phone, tablet, and desktop layouts, including RTL. Preserve keyboard-accessible native controls and safely escaped filter values.
+- Document and test distinct table names for independent reordering sessions on pages with multiple tables ([#2328](https://github.com/rappasoft/laravel-livewire-tables/issues/2328)). The default table name remains `table` for backward compatibility.
+- Update verified CI actions, install dependencies even when the Composer download cache is restored, and correct Laravel version constraints. Add PHP 8.1 and 8.5 boundary coverage, run the full matrix on master and release tags, and remove the duplicate localization test-suite registration.
+- Prefer stable dependencies, raise PHPUnit security minima, and support PHPUnit 13. Legacy Laravel 10/11 compatibility tests allowlist only four verified upstream framework advisories in their temporary CI configuration; production applications should use patched Laravel 12.69+ or 13.30+.
+- Update Codecov and release notification automation, including correct secret-input handling and a pinned Discord release action.
+
 ## [v3.8.0] - 2026-07-28
 ### Behavior Changes
 These are intentional fixes, but they change existing behavior. Review them before upgrading.

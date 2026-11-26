@@ -6,8 +6,8 @@ on:
       - '*'         # matches every branch that doesn't contain a '/'
       - '*/*'       # matches every branch containing a single '/'
       - '**'        # matches every branch
-      - '!master'
       - '!development'
+    tags: ['v*']
 
 jobs:
   test:
@@ -18,16 +18,17 @@ jobs:
         os: [ubuntu-latest]
         php: [8.4]
         laravel: [13]
+        livewire: [3.*, 4.*]
         stability: [prefer-dist]
 
-    name: PHPStan - P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    name: PHPStan - P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }} - Livewire-${{ matrix.livewire }}
     env:
       extensionKey: phpextensions-${{ matrix.os }}-P${{ matrix.php }}
       extensions: dom, curl, libxml, mbstring, zip, pcntl, pcov, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, exif, iconv, fileinfo
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Setup cache environment
         id: extcache
@@ -38,19 +39,18 @@ jobs:
           key: ${{ env.extensionKey }}
 
       - name: Cache extensions
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.extcache.outputs.dir }}
           key: ${{ steps.extcache.outputs.key }}
           restore-keys: ${{ steps.extcache.outputs.key }}
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.40.0
         with:
           php-version: ${{ matrix.php }}
           extensions: ${{ env.extensions }}
           coverage: pcov
-          tools: phpunit:11.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,11 +62,11 @@ jobs:
         run: |
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: phpstan-${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: phpstan-${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-composer-
+          key: phpstan-${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: phpstan-${{ matrix.os }}-PHP${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}-composer-
 
       - name: Add token
         env: 
@@ -75,20 +75,18 @@ jobs:
           composer config github-oauth.github.com $GITHUB_TOKEN
           
       - name: Install dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
-        run: composer require "laravel/framework:${{ matrix.laravel }}.*" --no-interaction --no-update
+        run: composer require "laravel/framework:${{ matrix.laravel }}.*" "livewire/livewire:${{ matrix.livewire }}" --no-interaction --no-update
 
       - name: Update dependencies
-        if: steps.composer-cache.outputs.cache-hit != 'true'
         run: composer update --${{ matrix.stability }} --no-interaction -W
 
       - name: Install PHPStan
         run: composer require larastan/larastan:^3.0 --dev --no-interaction -W
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6.1.0
         with:
           path: ./build/phpstan
-          key: phpstan-${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}
+          key: phpstan-${{ matrix.os }}-P${{ matrix.php }}-L${{ matrix.laravel }}-LW${{ matrix.livewire }}
 
       - name: Run PHPStan Tests
         run: ./vendor/bin/phpstan analyse

@@ -7,6 +7,12 @@ This feature works for mutiple tables on the same page that are **different** co
 
 This feature **does not work** for multiple tables on the same page that are the **same component** but take different parameters.
 
+> **Set a distinct `$tableName` on every table sharing a page — even if you do not use the query string.**
+>
+> `$tableName` defaults to `table` for every component, and it keys more than the query string: it also keys the reordering session, the stored filters, and the stored column selection. Tables sharing a name also share these persistence keys. See [What the table name keys](#what-the-table-name-keys) below.
+
+Reordering locates the table and its data rows within the owning Livewire component. This prevents another table's rows from being moved or saved when tables share their default HTML IDs. Give each table its own name and matching data array for independent query strings, persisted state and HTML IDs.
+
 ---
 
 For example, this works:
@@ -80,6 +86,27 @@ public array $queryString = [
         ...
     ],
 ]
+```
+
+## What the table name keys
+
+The table name is not only a query string prefix. These are all derived from it, so two tables sharing a name share the value behind each one:
+
+| Key | Used for |
+| --- | --- |
+| `{tableName}` | The query string array |
+| `{tableName}-reordering` | Whether the table is currently being reordered |
+| `{tableName}-reordering-backup` | The table state to restore when reordering is cancelled |
+| `{tableName}-stored-filters` | Filters persisted to the session |
+| `{tableName}-stored-columnselect` | Column selection persisted to the session |
+
+The `filter-was-set` event and the `FilterApplied` / `ColumnsSelected` events also carry the table name as their only identifier, so a listener cannot tell two identically named tables apart.
+
+Giving each table its own name is enough to separate all of the above:
+
+```php
+public string $tableName = 'users';
+public array $users = [];
 ```
 
 ## Disabling the query string for multiple of the same component
