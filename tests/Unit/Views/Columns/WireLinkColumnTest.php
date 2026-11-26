@@ -53,14 +53,20 @@ class WireLinkColumnTest extends ColumnTestCase
 
     public function test_can_render_icon_on_either_side_of_the_title(): void
     {
-        $column = WireLinkColumn::make('Name')->title(fn ($row) => 'Edit')->action(fn ($row) => 'delete("'.$row->id.'")')->setIcon('fas fa-pencil');
+        $column = WireLinkColumn::make('Name')->title(fn ($row) => 'Edit')->action(fn ($row) => 'delete("'.$row->id.'")')->setIcon('heroicon-o-pencil');
 
-        // Right is the HasIcon default
-        $this->assertStringContainsString('>Edit<i class="ml-1 fas fa-pencil"></i></button>', $column->getContents(Pet::find(1))->render());
+        $rendered = $column->getContents(Pet::find(1))->render();
+        $this->assertTrue($column->hasIconRight());
+        $this->assertFalse($column->hasIconLeft());
+        $this->assertLessThan(strpos($rendered, '<svg'), strpos($rendered, 'Edit'));
 
         $column->setIconLeft();
 
-        $this->assertStringContainsString('><i class="mr-1 fas fa-pencil"></i>Edit</button>', $column->getContents(Pet::find(1))->render());
+        $rendered = $column->getContents(Pet::find(1))->render();
+        $this->assertTrue($column->hasIconLeft());
+        $this->assertFalse($column->hasIconRight());
+        $this->assertSame('heroicon-o-pencil', $column->getIconLeft());
+        $this->assertLessThan(strpos($rendered, 'Edit'), strpos($rendered, '<svg'));
     }
 
     public function test_can_add_confirm_message(): void

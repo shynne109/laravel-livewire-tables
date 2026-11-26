@@ -14,15 +14,35 @@ trait HasIcons
 
     public array $iconRightAttributes = ['class' => 'w-4 h-4', 'default-styling' => true];
 
-    public function setIconLeft(string $icon): self
+    /**
+     * Set the left icon, or move an existing right icon to the left when called without an argument.
+     */
+    public function setIconLeft(?string $icon = null): self
     {
+        if ($icon === null) {
+            $this->iconLeft = $this->iconRight ?? $this->iconLeft;
+            $this->iconRight = null;
+
+            return $this;
+        }
+
         $this->iconLeft = $icon;
 
         return $this;
     }
 
-    public function setIconRight(string $icon): self
+    /**
+     * Set the right icon, or move an existing left icon to the right when called without an argument.
+     */
+    public function setIconRight(?string $icon = null): self
     {
+        if ($icon === null) {
+            $this->iconRight = $this->iconLeft ?? $this->iconRight;
+            $this->iconLeft = null;
+
+            return $this;
+        }
+
         $this->iconRight = $icon;
 
         return $this;
